@@ -1,5 +1,0 @@
-# Web Project 2025
-
-TO DO LIST PROJECT
-
-

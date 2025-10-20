@@ -1,0 +1,53 @@
+
+<body>
+
+    <section class="bg-light py-5">
+        <div class="container px-5 my-5 px-5">
+            <div class="text-center mb-5">
+                
+                <h2 class="fw-bolder">Login</h2>
+                <p class="lead mb-0">Access your tasks in seconds</p>
+            </div>
+            <div class="row gx-5 justify-content-center">
+                <div class="col-lg-6">
+                    <form id="contactForm">
+                        <!-- Email address input-->
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="email" type="email" placeholder="name@example.com" required />
+                            <label for="email">Username or email address</label>
+                            <div class="invalid-feedback">An email is required.</div>
+                            <div class="invalid-feedback">Email is not valid.</div>
+                        </div>
+                        <!-- Password input-->
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="phone" type="tel" placeholder="(123) 456-7890" required />
+                            <label for="phone">Password</label>
+                            <div class="invalid-feedback">Password is invalid</div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="show-password">
+                            <label class="form-check-label" for="show-password">Remember me</label>
+                        </div>
+
+                        <!-- Forgot Password -->
+                        <div class="mb-3 text-end">
+                            <a href="#forgot-password" class="text-decoration-none">Forgot Password?</a>
+
+                        </div>
+                        
+                        
+                        <!-- Submit Button-->
+                        <div class="d-grid"><button class="btn btn-primary btn-lg" id="submitButton" type="submit">Login</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bootstrap core JS -->
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/script.js"></script>
+
+</body>
+</html>

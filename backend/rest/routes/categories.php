@@ -2,8 +2,6 @@
 
 require_once __DIR__ . '/../services/CategoryService.php';
 
-
-
 Flight::set('categoryService', new CategoryService());
 
 /**
@@ -18,12 +16,11 @@ Flight::set('categoryService', new CategoryService());
  * )
  */
 Flight::route('GET /categories', function() {
-    try {
-        Flight::json(Flight::get('categoryService')->getAll());
-    } catch (Exception $e) {
-        Flight::json(['error' => $e->getMessage()], 500);
-    }
+    Flight::auth_middleware()->authorizeRole(Roles::USER);
+
+    Flight::json(Flight::categoryService()->getAll());
 });
+
 
 /**
  * @OA\Get(
@@ -37,28 +34,22 @@ Flight::route('GET /categories', function() {
  *         description="Category ID",
  *         @OA\Schema(type="integer", example=1)
  *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Category found"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Category not found"
- *     )
+ *     @OA\Response(response=200, description="Category found"),
+ *     @OA\Response(response=404, description="Category not found")
  * )
  */
 Flight::route('GET /categories/@id', function($id) {
-    try {
-        $category = Flight::get('categoryService')->getById($id);
-        if ($category) {
-            Flight::json($category);
-        } else {
-            Flight::json(["status" => "error", "message" => "Category not found"], 404);
-        }
-    } catch (Exception $e) {
-        Flight::json(['error' => $e->getMessage()], 500);
+    Flight::auth_middleware()->authorizeRole(Roles::USER);
+
+    $category = Flight::categoryService()->getById($id);
+
+    if ($category) {
+        Flight::json($category);
+    } else {
+        Flight::json(["message" => "Category not found"], 404);
     }
 });
+
 
 /**
  * @OA\Post(
@@ -70,23 +61,19 @@ Flight::route('GET /categories/@id', function($id) {
  *         @OA\JsonContent(
  *             required={"name"},
  *             @OA\Property(property="name", type="string", example="Work"),
- *             @OA\Property(property="id", type="integer", example="7")
+ *             @OA\Property(property="id", type="integer", example=7)
  *         )
  *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Category created successfully"
- *     )
+ *     @OA\Response(response=200, description="Category created successfully")
  * )
  */
 Flight::route('POST /categories', function() {
-    try {
-        $data = Flight::request()->data->getData();
-        Flight::json(Flight::get('categoryService')->create($data));
-    } catch (Exception $e) {
-        Flight::json(['error' => $e->getMessage()], 500);
-    }
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+
+    $data = Flight::request()->data->getData();
+    Flight::json(Flight::categoryService()->create($data));
 });
+
 
 /**
  * @OA\Put(
@@ -104,8 +91,7 @@ Flight::route('POST /categories', function() {
  *         required=true,
  *         @OA\JsonContent(
  *             required={"name"},
- *             @OA\Property(property="name", type="string", example="School"),
- *            
+ *             @OA\Property(property="name", type="string", example="School")
  *         )
  *     ),
  *     @OA\Response(
@@ -115,13 +101,12 @@ Flight::route('POST /categories', function() {
  * )
  */
 Flight::route('PUT /categories/@id', function($id) {
-    try {
-        $data = Flight::request()->data->getData();
-        Flight::json(Flight::get('categoryService')->update($id, $data));
-    } catch (Exception $e) {
-        Flight::json(['error' => $e->getMessage()], 500);
-    }
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+
+    $data = Flight::request()->data->getData();
+    Flight::json(Flight::categoryService()->update($id, $data));
 });
+
 
 /**
  * @OA\Delete(
@@ -142,9 +127,9 @@ Flight::route('PUT /categories/@id', function($id) {
  * )
  */
 Flight::route('DELETE /categories/@id', function($id) {
-    try {
-        Flight::json(Flight::get('categoryService')->delete($id));
-    } catch (Exception $e) {
-        Flight::json(['error' => $e->getMessage()], 500);
-    }
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+
+    Flight::json(Flight::categoryService()->delete($id));
 });
+
+?>

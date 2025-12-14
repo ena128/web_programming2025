@@ -1,11 +1,10 @@
-
 <?php
 use OpenApi\Annotations as OA;
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-
 require_once __DIR__ . '/../services/PriorityService.php';
+
 
 Flight::set('priorityService', new PriorityService());
 
@@ -21,7 +20,8 @@ Flight::set('priorityService', new PriorityService());
  * )
  */
 Flight::route('GET /priorities', function() {
-    Flight::json(Flight::get('priorityService')->getAll());
+    Flight::auth_middleware()->authorizeRole(Roles::USER);
+    Flight::json(Flight::priorityService()->getAll());
 });
 
 /**
@@ -47,7 +47,8 @@ Flight::route('GET /priorities', function() {
  * )
  */
 Flight::route('GET /priorities/@id', function($id) {
-    Flight::json(Flight::get('priorityService')->getById($id));
+    Flight::auth_middleware()->authorizeRole(Roles::USER);
+    Flight::json(Flight::priorityService()->getById($id));
 });
 
 /**
@@ -69,14 +70,12 @@ Flight::route('GET /priorities/@id', function($id) {
  *     )
  * )
  */
-
-
-// create a new priority
 Flight::route('POST /priorities', function() {
-    $data = Flight::request()->data->getData();
-    Flight::json(Flight::get('priorityService')->create($data));
-});
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
 
+    $data = Flight::request()->data->getData();
+    Flight::json(Flight::priorityService()->create($data));
+});
 
 /**
  * @OA\Put(
@@ -104,8 +103,10 @@ Flight::route('POST /priorities', function() {
  * )
  */
 Flight::route('PUT /priorities/@id', function($id) {
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+
     $data = Flight::request()->data->getData();
-    Flight::json(Flight::get('priorityService')->update($id, $data));
+    Flight::json(Flight::priorityService()->update($id, $data));
 });
 
 /**
@@ -127,6 +128,6 @@ Flight::route('PUT /priorities/@id', function($id) {
  * )
  */
 Flight::route('DELETE /priorities/@id', function($id) {
-    Flight::json(Flight::get('priorityService')->delete($id));
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+    Flight::json(Flight::priorityService()->delete($id));
 });
-?>

@@ -28,4 +28,19 @@ $(document).ready(function () {
             $("#dropdown-menu").addClass("hidden");
         }
     });
+    $("#account").on("spapp:loaded", function() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        app.load("#login");
+        return;
+    }
+
+    const user = JSON.parse(localStorage.getItem("logged_user")) || {
+        name: "John Doe",
+        email: "john.doe@example.com"
+    };
+
+    $("#user-name").text(user.name);
+    $("#user-email").text(user.email);
+});
 });

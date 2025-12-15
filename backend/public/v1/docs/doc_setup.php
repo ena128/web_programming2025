@@ -1,25 +1,18 @@
 <?php
-
 /**
  * @OA\Info(
- *     title="API",
- *     description="Web programming API",
- *     version="1.0",
- *     @OA\Contact(
- *         email="web2001programming@gmail.com",
- *         name="Web Programming"
- *     )
- * )
- */
-
-/**
+ *   title="API",
+ *   description="Web programming API",
+ *   version="1.0",
+ *   @OA\Contact(
+ *     email="web2001programming@gmail.com",
+ *     name="Web Programming"
+ *   )
+ * ),
  * @OA\Server(
- *     url="http://localhost/web_programming2025/backend/rest",
+ *     url="http://localhost/web_programming2025/backend/",
  *     description="API server"
- * )
- */
-
-/**
+ * ),
  * @OA\SecurityScheme(
  *     securityScheme="ApiKey",
  *     type="apiKey",

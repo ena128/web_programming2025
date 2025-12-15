@@ -3,7 +3,6 @@ use OpenApi\Annotations as OA;
 
 require_once __DIR__ . '/../services/ActivityLogsService.php';
 
-
 Flight::set('activityLogsService', new ActivityLogsService());
 
 /**
@@ -29,8 +28,10 @@ Flight::set('activityLogsService', new ActivityLogsService());
  * )
  */
 Flight::route('GET /logs', function() {
-    Flight::json(Flight::get('activityLogsService')->getAll());
+    Flight::auth_middleware()->authorizeRole(Roles::USER);
+    Flight::json(Flight::activityLogsService()->getAll());
 });
+
 
 /**
  * @OA\Get(
@@ -58,8 +59,10 @@ Flight::route('GET /logs', function() {
  * )
  */
 Flight::route('GET /logs/@id', function($id) {
-    Flight::json(Flight::get('activityLogsService')->getById($id));
+    Flight::auth_middleware()->authorizeRole(Roles::USER);
+    Flight::json(Flight::activityLogsService()->getById($id));
 });
+
 
 /**
  * @OA\Post(
@@ -77,22 +80,16 @@ Flight::route('GET /logs/@id', function($id) {
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Activity log created successfully",
- *         @OA\JsonContent(
- *             type="object",
- *             properties={
- *                 @OA\Property(property="user_id", type="integer", example=1),
- *                 @OA\Property(property="action", type="string", example="User logged in"),
- *                 @OA\Property(property="timestamp", type="string", format="date-time", example="2025-04-17T12:00:00")
- *             }
- *         )
+ *         description="Activity log created successfully"
  *     )
  * )
  */
 Flight::route('POST /logs', function() {
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
     $data = Flight::request()->data->getData();
-    Flight::json(Flight::get('activityLogsService')->create($data));
+    Flight::json(Flight::activityLogsService()->create($data));
 });
+
 
 /**
  * @OA\Put(
@@ -115,22 +112,16 @@ Flight::route('POST /logs', function() {
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Activity log updated successfully",
- *         @OA\JsonContent(
- *             type="object",
- *             properties={
- *                 @OA\Property(property="id", type="integer", example=1),
- *                 @OA\Property(property="action", type="string", example="User logged out"),
- *                 @OA\Property(property="timestamp", type="string", format="date-time", example="2025-04-17T13:00:00")
- *             }
- *         )
+ *         description="Updated successfully"
  *     )
  * )
  */
 Flight::route('PUT /logs/@id', function($id) {
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
     $data = Flight::request()->data->getData();
-    Flight::json(Flight::get('activityLogsService')->update($id, $data));
+    Flight::json(Flight::activityLogsService()->update($id, $data));
 });
+
 
 /**
  * @OA\Delete(
@@ -143,13 +134,12 @@ Flight::route('PUT /logs/@id', function($id) {
  *         required=true,
  *         @OA\Schema(type="integer")
  *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Activity log deleted successfully"
- *     )
+ *     @OA\Response(response=200, description="Deleted successfully")
  * )
  */
 Flight::route('DELETE /logs/@id', function($id) {
-    Flight::json(Flight::get('activityLogsService')->delete($id));
+    Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+    Flight::json(Flight::activityLogsService()->delete($id));
 });
+
 ?>

@@ -1,11 +1,6 @@
 <?php
 use OpenApi\Annotations as OA;
 
-require_once __DIR__ . '/../services/UserService.php';
-
-
-Flight::set('userService', new UserService());
-
 /**
  * @OA\Get(
  *     path="/users",
@@ -16,7 +11,7 @@ Flight::set('userService', new UserService());
  */
 Flight::route('GET /users', function () {
     try {
-        Flight::json(Flight::get('userService')->getAll());
+            Flight::json(Flight::userService()->getAll());
     } catch (Exception $e) {
         Flight::json(['error' => $e->getMessage()], 500);
     }

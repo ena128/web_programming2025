@@ -48,7 +48,6 @@
         <section id="account" data-load="account.html"></section>
         <section id="register" data-load="register.html"></section>
         <section id="login" data-load="login.html"></section>
-        <section id="forgot-password" data-load="forgot-password.html"></section>
         <section id="about-us" data-load="about-us.html"></section>
     </main>
 
@@ -59,35 +58,28 @@
         </div>
     </footer>
 
-    <!-- jQuery and SPA plugin -->
     <script src="frontend/assets/js/jquery.min.js"></script>
-    <script src="frontend/assets/js/jquery.spapp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+<script src="frontend/assets/js/jquery.spapp.min.js"></script>
+<script src="frontend/assets/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Bootstrap JS -->
-    <script src="frontend/assets/js/bootstrap.bundle.min.js"></script>
+<script src="frontend/utils/constants.js"></script>
+<script src="frontend/utils/utils.js"></script>
 
-    <!-- Tvoji servisi -->
-    <script src="frontend/services/user-service.js"></script>
 
-    <!-- Custom script for SPA -->
-    <script src="frontend/assets/js/script.js"></script>
+<script src="frontend/assets/js/script.js"></script>
+<script src="frontend/assets/js/app.js"></script>
+
+<script src="frontend/services/user-service.js"></script>
+<script src="frontend/services/task-service.js"></script>
+<script src="frontend/services/category-service.js"></script>
+
+<script type="text/javascript">
+     UserService.init();
+   </script>
+
     
-
-    <!-- SPA initialization -->
-    <script>
-        var app = $.spapp({
-            defaultView: "#home",  
-            templateDir: "frontend/views/"  // Folder gdje se nalaze sve HTML stranice
-        });
-
-        $(document).ready(function() {
-            // Aktivna navigacija
-            $(".nav-link").on("click", function() {
-                $(".nav-link").removeClass("active");
-                $(this).addClass("active");
-            });
-        });
-    </script>
 </body>
 
 </html>

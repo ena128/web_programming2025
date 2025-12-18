@@ -1,6 +1,12 @@
 <?php
 // Autoload Composer dependencies
 require __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/rest/routes/AuthRoutes.php';
+require_once __DIR__ . '/rest/routes/users.php';
+require_once __DIR__ . '/rest/routes/tasks.php';
+require_once __DIR__ . '/rest/routes/categories.php';
+require_once __DIR__ . '/rest/routes/priorities.php';
+require_once __DIR__ . '/rest/routes/activitylogs.php';
 
 // ===== Services =====
 require_once __DIR__ . '/rest/services/UserService.php';
@@ -9,6 +15,7 @@ require_once __DIR__ . '/rest/services/CategoryService.php';
 require_once __DIR__ . '/rest/services/PriorityService.php';
 require_once __DIR__ . '/rest/services/ActivityLogsService.php';
 require_once __DIR__ . '/rest/services/AuthService.php';
+
 
 // ===== Middleware =====
 require_once __DIR__ . '/middleware/AuthMiddleware.php';
@@ -66,13 +73,6 @@ Flight::before('start', function(&$params, &$output) {
     }
 });
 
-// ===== Routes =====
-require_once __DIR__ . '/rest/routes/AuthRoutes.php';
-require_once __DIR__ . '/rest/routes/users.php';
-require_once __DIR__ . '/rest/routes/tasks.php';
-require_once __DIR__ . '/rest/routes/categories.php';
-require_once __DIR__ . '/rest/routes/priorities.php';
-require_once __DIR__ . '/rest/routes/activitylogs.php';
 
 // ===== Default route =====
 Flight::route('/', function() {

@@ -1,5 +1,8 @@
 const TaskService = {
-    // Get all tasks for the logged-in user
+    /**
+     * Fetches all tasks for the currently logged-in user from the backend.
+     * @param {function} callback - Function to handle the returned tasks.
+     */
     getTasks: function(callback) {
         const token = localStorage.getItem("user_token");
         if (!token) {
@@ -22,7 +25,11 @@ const TaskService = {
         });
     },
 
-    // Add a new task (admin only)
+    /**
+     * Adds a new task to the database (Admin only).
+     * @param {object} taskData - Object containing the task title.
+     * @param {function} callback - Function to execute on success.
+     */
     addTask: function(taskData, callback) {
         const token = localStorage.getItem("user_token");
         if (!token) {
@@ -47,7 +54,12 @@ const TaskService = {
         });
     },
 
-    // Update task by ID (admin only)
+    /**
+     * Updates an existing task's title by its ID (Admin only).
+     * @param {number} taskId - ID of the task to update.
+     * @param {object} taskData - New task data.
+     * @param {function} callback - Function to execute on success.
+     */
     updateTask: function(taskId, taskData, callback) {
         const token = localStorage.getItem("user_token");
         if (!token) {
@@ -72,7 +84,11 @@ const TaskService = {
         });
     },
 
-    // Delete task by ID (admin only)
+    /**
+     * Deletes a task from the database by its ID (Admin only).
+     * @param {number} taskId - ID of the task to delete.
+     * @param {function} callback - Function to execute on success.
+     */
     deleteTask: function(taskId, callback) {
         const token = localStorage.getItem("user_token");
         if (!token) {
@@ -95,3 +111,50 @@ const TaskService = {
         });
     }
 };
+
+/**
+ * Global Event Delegation for Task Actions.
+ * These listeners are attached to the document so they work for items 
+ * loaded dynamically into the DOM by the SPA.
+ */
+$(document).ready(function() {
+    
+    // Add Task Button Delegation
+    $(document).on("click", "#addTaskBtn", function() {
+        const title = $('#newTaskTitle').val().trim();
+        if (!title) {
+            toastr.error("Task title cannot be empty.");
+            return;
+        }
+        TaskService.addTask({ title: title }, function() {
+            $('#newTaskTitle').val('');
+            // Reload tasks manually or refresh view logic here
+            if (typeof loadTasks === 'function') loadTasks('admin'); 
+        });
+    });
+
+    // Delete Task Button Delegation
+    $(document).on("click", ".deleteBtn", function() {
+        const $li = $(this).closest('li');
+        const taskId = $li.data('id');
+        if (confirm("Are you sure you want to delete this task?")) {
+            TaskService.deleteTask(taskId, function() {
+                $li.remove();
+            });
+        }
+    });
+
+    // Edit Task Button Delegation
+    $(document).on("click", ".editBtn", function() {
+        const $li = $(this).closest('li');
+        const taskId = $li.data('id');
+        const currentTitle = $li.find('.task-title').text();
+        const newTitle = prompt("Edit task title:", currentTitle);
+        
+        if (newTitle && newTitle.trim() !== "" && newTitle !== currentTitle) {
+            TaskService.updateTask(taskId, { title: newTitle.trim() }, function() {
+                $li.find('.task-title').text(newTitle.trim());
+            });
+        }
+    });
+});

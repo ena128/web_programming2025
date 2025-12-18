@@ -1,68 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
-
-    
-</head>
-
-<body>
-
 <section class="bg-light py-5">
-    <div class="container px-5 my-5 px-5">
+    <div class="container px-5 my-5">
         <div class="text-center mb-5">
             <h2 class="fw-bolder">Login</h2>
             <p class="lead mb-0">Access your tasks in seconds</p>
         </div>
         <div class="row gx-5 justify-content-center">
             <div class="col-lg-6">
-
                 <form id="login-form">
-    <div class="form-floating mb-3">
-        <input class="form-control" 
-               id="email" 
-               name="email"
-               type="email" 
-               placeholder="name@example.com" 
-               autocomplete="email"
-               required />
-        <label for="email">Email</label>
-    </div>
-
-    <div class="form-floating mb-3">
-        <input class="form-control" 
-               id="password" 
-               name="password"
-               type="password" 
-               placeholder="********" 
-               autocomplete="current-password"
-               required />
-        <label for="password">Password</label>
-    </div>
-
-    <div class="d-grid">
-        <button class="btn btn-primary btn-lg" id="login-btn" type="button">Login</button>
-    </div>
-</form>
-
+                    <div class="form-floating mb-3">
+                       <input class="form-control" id="email" name="email" type="email" placeholder="name@example.com" autocomplete="username" required />
+                        <label for="email">Email</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input class="form-control" id="password" name="password" type="password" placeholder="********" autocomplete="current-password" required />
+                        <label for="password">Password</label>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-primary btn-lg" id="login-btn" type="submit">Login</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </section>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js"></script>
-   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-   <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
-   <script src="frontend/utils/constants.js"></script>
- 
-   <script type="text/javascript">
-     UserService.init();
-   </script>
-
-
-</body>
-</html>

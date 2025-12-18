@@ -1,199 +1,121 @@
-const UserService = {
+var UserService = {
+    /**
+     * Initializes event listeners for Login and Register forms.
+     * Uses event delegation to handle forms loaded dynamically via SPApp.
+     */
     init: function () {
-        const path = window.location.pathname;
-        const token = localStorage.getItem("user_token");
+        // Handle Login form submission
+        $(document).off("submit", "#login-form").on("submit", "#login-form", function (e) {
+            e.preventDefault();
+            
+            const entity = {
+                email: $("#email").val(),
+                password: $("#password").val()
+            };
+            
+            UserService.login(entity);
+        });
 
-        // Validator custom methods
-        if ($.validator && !$.validator.methods.lettersandspacesonly) {
-            $.validator.addMethod("lettersandspacesonly", function (value, element) {
-                return this.optional(element) || /^[a-zA-ZčćžšđČĆŽŠĐ\s]+$/.test(value);
-            }, "Please enter only letters and spaces.");
-        }
-        if ($.validator && !$.validator.methods.pwcheck) {
-            $.validator.addMethod("pwcheck", function (value) {
-                return /^(?=.*[A-Za-z])(?=.*\d).{6,}$/.test(value);
-            }, "Password must be at least 6 characters and include at least one letter and one number.");
-        }
-
-        // LOGIN PAGE
-        if (path.endsWith("login.html")) {
-            if (token && token !== "undefined") {
-                window.location.replace("index.html");
-                return;
-            }
-            if ($("#login-form").length) {
-                $("#login-form").validate({
-                    rules: {
-                        email: { required: true, email: true },
-                        password: { required: true, minlength: 6 }
-                    },
-                    messages: {
-                        email: { required: "Email is required.", email: "Please enter a valid email address." },
-                        password: { required: "Password is required.", minlength: "Password must be at least 6 characters." }
-                    },
-                    submitHandler: function (form) {
-                        var entity = {
-                            email: $("#email").val(),
-                            password: $("#password").val()
-                        };
-                         console.log("Login data:", entity);
-        UserService.login(entity, form);
-                       
-                    }
-                });
-            }
-        }
-        // REGISTER PAGE
-        else if (path.endsWith("register.html")) {
-            if (token && token !== "undefined") {
-                window.location.replace("index.html");
-                return;
-            }
-            if ($("#register-form").length) {
-                $("#register-form").validate({
-                    rules: {
-                        fullname: { required: true, minlength: 3, lettersandspacesonly: true },
-                        email: { required: true, email: true },
-                        username: { required: true, minlength: 3 },
-                        password: { required: true, minlength: 6, pwcheck: true }
-                    },
-                    messages: {
-                        fullname: { required: "Full name is required.", minlength: "Full name must be at least 3 characters.", lettersandspacesonly: "Full name must contain only letters and spaces." },
-                        email: { required: "Email is required.", email: "Please enter a valid email address." },
-                        username: { required: "Username is required.", minlength: "Username must be at least 3 characters." },
-                        password: { required: "Password is required.", minlength: "Password must be at least 6 characters.", pwcheck: "Password must include at least one letter and one number." }
-                    },
-                    submitHandler: function (form) {
-                        var entity = Object.fromEntries(new FormData(form).entries());
-                        UserService.register(entity, form);
-                    }
-                });
-            }
-        }
-        // INDEX OR OTHER PAGES
-        else {
-            if (typeof UserService.generateMenuItems === 'function') {
-                UserService.generateMenuItems();
-            }
-        }
-    },
-
-    login: function (entity, formEl) {
-        console.log("UserService.login called with:", entity);
-        $.ajax({
-            url: Constants.PROJECT_BASE_URL + "/auth/login",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(entity),
-            success: function (res) {
-                localStorage.setItem("user_token", res.data.token);
-                toastr.success("Login successful!");
-                if (formEl) formEl.reset();
-                window.location.href = "./account.html";
-            },
-            error: function (xhr) {
-                console.error("Login failed:", xhr.responseText || "Unknown error");
-                let msg = "Login failed. Please check your credentials.";
-                try {
-                    const resp = JSON.parse(xhr.responseText);
-                    if (resp.error) msg = resp.error;
-                } catch (e) { }
-                toastr.error(msg);
-            }
+        // Handle Register form submission
+        $(document).off("submit", "#register-form").on("submit", "#register-form", function (e) {
+            e.preventDefault();
+            
+            const entity = {
+                fullname: $("#fullName").val(),
+                email: $("#email").val(),
+                password: $("#password").val()
+            };
+            
+            UserService.register(entity);
         });
     },
 
-    register: function (entity, formEl) {
-        console.log("UserService.register called with entity:", entity);
-        $.ajax({
-            url: Constants.PROJECT_BASE_URL + "/auth/register",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(entity),
-            dataType: "json",
-            success: function (res) {
-                toastr.success("Registration successful! Please login.");
-                if (formEl) formEl.reset();
-                window.location.replace("login.html");
-            },
-            error: function (xhr) {
-                console.error("Registration failed:", xhr.responseText || "Unknown error");
-                let msg = "Registration failed. Please try again.";
-                try {
-                    const resp = JSON.parse(xhr.responseText);
-                    if (resp.error) msg = resp.error;
-                } catch (e) { }
-                toastr.error(msg);
-            }
-        });
-    },
-    getCurrentUser: function(callback) {
-    const token = localStorage.getItem("user_token");
-    if (!token) {
-        callback(null); // nema tokena
-        return;
-    }
-
+    /**
+     * Sends login credentials to the backend.
+     */
+    login: function (entity) {
     $.ajax({
-        url: Constants.PROJECT_BASE_URL + "/auth/me",
-        method: "GET",
-        headers: {
-            "Authorization": "Bearer " + token
+        url: Constants.PROJECT_BASE_URL + "/auth/login",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            email: entity.email.trim(), // Remove accidental spaces
+            password: entity.password.trim()
+        }),
+        success: function (res) {
+            localStorage.setItem("user_token", res.data.token);
+            toastr.success("Login successful!");
+            window.location.hash = "#home";
+            location.reload(); 
         },
-        success: function(res) {
-            callback(res.user); // vraćamo usera kroz callback
-        },
-        error: function(err) {
-            console.error("Failed to load current user:", err);
-            localStorage.removeItem("user_token"); // token invalid
-            callback(null);
+        error: function (xhr) {
+            // This will now show the EXACT error from PHP
+            const errorMsg = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
+            console.error("Backend says:", errorMsg);
+            toastr.error(errorMsg);
         }
     });
 },
 
-
-    logout: function () {
-        localStorage.removeItem("user_token");
-        toastr.info("You have been logged out.");
-        window.location.replace("index.html");
+    /**
+     * Sends registration data to the backend.
+     */
+    register: function (entity) {
+        $.ajax({
+            url: Constants.PROJECT_BASE_URL + "/auth/register",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(entity),
+            success: function (res) {
+                toastr.success("Registration successful! You can now login.");
+                window.location.hash = "#login";
+            },
+            error: function (xhr) {
+                toastr.error("Registration failed. Email might already be in use.");
+                console.error("Registration error:", xhr.responseText);
+            }
+        });
     },
 
+    /**
+     * Generates navbar items dynamically based on the user's authentication state.
+     */
     generateMenuItems: function () {
         const token = localStorage.getItem("user_token");
-        let nav = "";
+        let nav = `<li class="nav-item"><a class="nav-link" href="#home">Home</a></li>`;
 
         if (token && token !== "undefined") {
-            let user = null;
-            try {
-                user = Utils.parseJwt(token).user;
-                if (!user || !user.role) throw new Error("Invalid token");
-            } catch (e) {
-                console.error("Token parsing error:", e);
-                localStorage.removeItem("user_token");
-                nav = `<li class="nav-item"><a class="nav-link fs-5" href="index.html">Home</a></li>
-                       <li class="nav-item"><a class="nav-link fs-5" href="login.html">Login</a></li>`;
-                $("#menuTabs").html(nav);
-                return;
-            }
-
-            nav += `<li class="nav-item"><a class="nav-link fs-5" href="index.html">Home</a></li>`;
-            if (user.role === Constants.USER_ROLE) {
-                nav += `<li class="nav-item"><a class="nav-link fs-5" href="account.html">Profile</a></li>`;
-            } else if (user.role === Constants.ADMIN_ROLE) {
-                nav += `<li class="nav-item"><a class="nav-link fs-5" href="account.html">Profile</a></li>
-                        <li class="nav-item"><a class="nav-link fs-5" href="admin-dashboard.html">Dashboard</a></li>`;
-            }
-            nav += `<li class="nav-item"><a class="nav-link fs-5" href="#" id="logoutButton">Logout</a></li>`;
+            // Links for logged-in users
+            nav += `<li class="nav-item"><a class="nav-link" href="#account">Account</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" id="logoutButton">Logout</a></li>`;
         } else {
-            nav = `<li class="nav-item"><a class="nav-link fs-5" href="index.html">Home</a></li>
-                   <li class="nav-item"><a class="nav-link fs-5" href="login.html">Login</a></li>`;
+            // Links for guests
+            nav += `<li class="nav-item"><a class="nav-link" href="#register">Register</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#login">Login</a></li>`;
         }
-        $("#menuTabs").html(nav);
+        
+        // Target the navbar ul in index.html
+        $("#navbarSupportedContent ul").html(nav);
+    },
+
+    /**
+     * Logs the user out by clearing the token and redirecting.
+     */
+    logout: function () {
+        localStorage.removeItem("user_token");
+        toastr.info("Logged out successfully.");
+        window.location.hash = "#home";
+        location.reload();
     }
 };
 
+/**
+ * Run initialization when the document is ready.
+ */
 $(document).ready(function () {
     UserService.init();
+    
+    // Handle Logout button click (delegated)
     $(document).on("click", "#logoutButton", function (e) {
         e.preventDefault();
         UserService.logout();

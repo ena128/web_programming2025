@@ -2,6 +2,9 @@
 // Autoload Composer dependencies
 require __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/config.php';
+// ===== Roles =====
+require_once __DIR__ . '/data/roles.php';
+
 require_once __DIR__ . '/rest/routes/AuthRoutes.php';
 require_once __DIR__ . '/rest/routes/users.php';
 require_once __DIR__ . '/rest/routes/tasks.php';
@@ -36,7 +39,7 @@ error_reporting(E_ALL);
 // ===== Register services with Flight =====
 Flight::register('authService', 'AuthService');
 Flight::register('userService', 'UserService');
-Flight::register('taskService', 'TaskService');
+Flight::register('TaskService', 'TaskService');
 Flight::register('categoryService', 'CategoryService');
 Flight::register('priorityService', 'PriorityService');
 Flight::register('activityLogsService', 'ActivityLogsService');

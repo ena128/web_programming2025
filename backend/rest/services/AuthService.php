@@ -29,7 +29,7 @@ class AuthService {
 
             // 4. Upis u bazu
             // createUser vraća ID novog korisnika
-            $new_user_id = $this->authDAO->createUser($data);
+            $new_user_id = $this->authDAO->create($data);
 
             // 5. Priprema odgovora (OVO JE FALILO)
             // Dodajemo ID u podatke koje vraćamo

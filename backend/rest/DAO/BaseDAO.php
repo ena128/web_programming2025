@@ -49,7 +49,7 @@ class BaseDAO {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function createUser($data) {
+    public function create($data) {
         $columns = implode(", ", array_keys($data));
         $values = ":" . implode(", :", array_keys($data));
         $stmt = $this->connection->prepare("INSERT INTO $this->tableName ($columns) VALUES ($values)");

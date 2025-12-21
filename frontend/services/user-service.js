@@ -1,65 +1,130 @@
 var UserService = {
-    /**
-     * Initializes event listeners for Login and Register forms.
-     * Uses event delegation to handle forms loaded dynamically via SPApp.
-     */
     init: function () {
-        // Handle Login form submission
+        // LOGIN LISTENER
         $(document).off("submit", "#login-form").on("submit", "#login-form", function (e) {
             e.preventDefault();
-            
             const entity = {
                 email: $("#email").val(),
                 password: $("#password").val()
             };
-            
             UserService.login(entity);
         });
 
-        // Handle Register form submission
+        // REGISTER LISTENER
         $(document).off("submit", "#register-form").on("submit", "#register-form", function (e) {
             e.preventDefault();
-            
             const entity = {
-                name: $("#name").val(),
+                name: $("#name").val(), 
                 email: $("#email").val(),
                 password: $("#password").val()
             };
-            
             UserService.register(entity);
+        });
+
+        // LOGOUT LISTENER
+        $(document).on("click", "#logoutBtn", function() {
+            UserService.logout();
         });
     },
 
-    /**
-     * Sends login credentials to the backend.
-     */
-    login: function (entity) {
-    $.ajax({
-        url: Constants.PROJECT_BASE_URL + "/auth/login",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({
-            email: entity.email.trim(), // Remove accidental spaces
-            password: entity.password.trim()
-        }),
-        success: function (res) {
-            localStorage.setItem("user_token", res.data.token);
-            toastr.success("Login successful!");
-            window.location.hash = "#home";
-            location.reload(); 
-        },
-        error: function (xhr) {
-            // This will now show the EXACT error from PHP
-            const errorMsg = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
-            console.error("Backend says:", errorMsg);
-            toastr.error(errorMsg);
-        }
-    });
-},
+    parseJwt: function (token) {
+        if (!token || token === "undefined") return null;
+        try {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join('')));
+        } catch (e) { return null; }
+    },
 
-    /**
-     * Sends registration data to the backend.
-     */
+    // OVO JE FALILO: Funkcija koja pravi meni zavisno od toga da li si Guest ili User
+    generateMenuItems: function() {
+        const token = localStorage.getItem("user_token");
+        const ul = $("#navbarSupportedContent ul"); // Selektujemo listu u navbaru
+        
+        let html = `
+            <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="#about-us">About Us</a></li>
+        `;
+
+        if (token) {
+            // Ako je ulogovan -> Prikazi Account i Logout
+            html += `
+                <li class="nav-item"><a class="nav-link" href="#account">My Account</a></li>
+                <li class="nav-item"><button class="btn btn-link nav-link" id="logoutBtn">Logout</button></li>
+            `;
+        } else {
+            // Ako NIJE ulogovan (Guest) -> Prikazi Login i Register
+            html += `
+                <li class="nav-item"><a class="nav-link" href="#login">Login</a></li>
+                <li class="nav-item"><a class="nav-link" href="#register">Register</a></li>
+            `;
+        }
+
+        ul.html(html);
+    },
+
+    initAccountPage: function () {
+        const token = localStorage.getItem("user_token");
+
+        // Ako neko pokuša ući na Account a nije ulogovan -> Login
+        if (!token) {
+            window.location.hash = "#login";
+            return;
+        }
+
+        const payload = UserService.parseJwt(token);
+
+        if (!payload || !payload.user) {
+            toastr.error("Invalid token");
+            UserService.logout();
+            return;
+        }
+
+        const user = payload.user;
+        $("#username").text(user.name || user.email);
+
+        // Role-Based Display
+        if (user.role === 'ADMIN') {
+            $("#adminPanel").show();
+            $("#userPanel").show();
+            if(typeof UserAdminService !== 'undefined') {
+                UserAdminService.loadAllUsers();
+            }
+        } else {
+            $("#adminPanel").hide();
+            $("#userPanel").show();
+        }
+
+        if(typeof TaskService !== 'undefined') {
+            TaskService.loadUserTasks();
+        }
+    },
+
+    login: function (entity) {
+        $.ajax({
+            url: Constants.PROJECT_BASE_URL + "/auth/login",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(entity),
+            success: function (res) {
+                const token = res.token || (res.data && res.data.token);
+                if (token) {
+                    localStorage.setItem("user_token", token);
+                    toastr.success("Login successful!");
+                    window.location.hash = "#account";
+                    UserService.generateMenuItems(); // Osvježi meni nakon logina
+                } else {
+                    toastr.error("Token error");
+                }
+            },
+            error: function (xhr) {
+                toastr.error(xhr.responseJSON ? xhr.responseJSON.error : "Login failed");
+            }
+        });
+    },
+
     register: function (entity) {
         $.ajax({
             url: Constants.PROJECT_BASE_URL + "/auth/register",
@@ -67,75 +132,25 @@ var UserService = {
             contentType: "application/json",
             data: JSON.stringify(entity),
             success: function (res) {
-                console.log("RESPONSE OD SERVERA:", res); // Gledaj u konzolu (F12)
-
-                // Ako server vrati samo ID (broj), pretvori ga u uspjeh
-                // Ako server vrati JSON objekat, to je isto super.
-                
-                toastr.success("Registration successful! Please login.");
-                
-                // Forsiramo preusmjeravanje nakon kratke pauze da vidiš poruku
+                toastr.success("Success! Redirecting to login...");
                 setTimeout(function() {
-                    console.log("Preusmjeravam na login...");
                     window.location.hash = "#login";
                 }, 1000);
             },
-            error: function (xhr, status, error) {
-                console.error("Greška detalji:", xhr);
-                console.log("Response text:", xhr.responseText);
-                
-                // Čak i ako je 200 OK, ako JSON nije validan, jQuery baci "parsererror"
-                if (xhr.status === 200) {
-                    toastr.success("Registracija uspjela (iako je format čudan)!");
-                    window.location.hash = "#login";
-                } else {
-                    toastr.error("Greška: " + xhr.responseText);
-                }
+            error: function (xhr) {
+                let msg = xhr.responseJSON ? xhr.responseJSON.error : "Error";
+                toastr.error(msg);
             }
         });
     },
 
-    /**
-     * Generates navbar items dynamically based on the user's authentication state.
-     */
-    generateMenuItems: function () {
-        const token = localStorage.getItem("user_token");
-        let nav = `<li class="nav-item"><a class="nav-link" href="#home">Home</a></li>`;
-
-        if (token && token !== "undefined") {
-            // Links for logged-in users
-            nav += `<li class="nav-item"><a class="nav-link" href="#account">Account</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" id="logoutButton">Logout</a></li>`;
-        } else {
-            // Links for guests
-            nav += `<li class="nav-item"><a class="nav-link" href="#register">Register</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#login">Login</a></li>`;
-        }
-        
-        // Target the navbar ul in index.html
-        $("#navbarSupportedContent ul").html(nav);
-    },
-
-    /**
-     * Logs the user out by clearing the token and redirecting.
-     */
     logout: function () {
         localStorage.removeItem("user_token");
-        toastr.info("Logged out successfully.");
-        window.location.hash = "#home";
-        location.reload();
+        window.location.hash = "#login";
+        UserService.generateMenuItems(); // Osvježi meni nakon logouta
     }
 };
 
-/**
- * Run initialization when the document is ready.
- */
 $(document).ready(function () {
     UserService.init();
-    
-    // Handle Logout button click (delegated)
-    $(document).on("click", "#logoutButton", function (e) {
-        e.preventDefault();
-        UserService.logout();
-    });
 });

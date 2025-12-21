@@ -1,20 +1,92 @@
-
-
-    <!-- Account Container -->
-    <div class="container mt-4">
-        <h2>Welcome, <span id="username"></span>!</h2>
-
-        <!-- Admin Panel -->
-        <div id="adminPanel" class="mb-3" style="display:none;">
-            <h4>Admin Panel</h4>
-            <div class="input-group mb-2">
-                <input type="text" id="newTaskTitle" class="form-control" placeholder="New task title">
-                <button id="addTaskBtn" class="btn btn-primary">Add Task</button>
-            </div>
-        </div>
-
-        <!-- Task List -->
-        <ul id="taskList" class="list-group"></ul>
+<div class="container-fluid px-4 py-5">
+    <div class="mb-4 text-center">
+        <h1 class="fw-bold">Welcome, <span id="user-name-display">User</span>!</h1>
+        <p class="lead text-muted" id="user-role-info">Organize your daily activities and tasks.</p>
     </div>
 
-   
+    <hr class="my-4">
+
+    <div id="user-info-section" style="display:none;">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Add New Task</h4>
+                        <div class="mb-3">
+                            <label for="taskTitleInput" class="form-label">Task Title</label>
+                            <input type="text" id="taskTitleInput" class="form-control" placeholder="What needs to be done?">
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskCategorySelect" class="form-label">Category</label>
+                            <select id="taskCategorySelect" class="form-select">
+                                <option value="">Loading categories...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskPrioritySelect" class="form-label">Priority</label>
+                            <select id="taskPrioritySelect" class="form-select">
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM" selected>Medium</option>
+                                <option value="HIGH">High</option>
+                            </select>
+                        </div>
+                        <button id="addTaskBtn" class="btn btn-success w-100">
+                            <i class="bi bi-plus-lg"></i> Add Task
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">My Tasks</h4>
+                        <div id="personal-tasks-list">
+                            <ul id="taskList" class="list-group list-group-flush">
+                                </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-full-wrapper" style="display:none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h4 fw-bold">System Management</h2>
+                <p class="text-muted">Direct database entity management (CRUD)</p>
+            </div>
+            <button class="btn btn-primary" onclick="AdminService.openAddModal()">
+                <i class="bi bi-plus-circle"></i> Add New Entity
+            </button>
+        </div>
+
+        <ul class="nav nav-pills mb-4" id="entityTabs">
+            <li class="nav-item">
+                <button class="nav-link active" onclick="AdminService.loadEntity('tasks')">Tasks</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="AdminService.loadEntity('categories')">Categories</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="AdminService.loadEntity('users')">Users</button>
+            </li>
+        </ul>
+
+        <div class="card shadow-sm border-0" id="admin-crud-section">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="admin-data-table">
+                        <thead class="table-light">
+                            <tr id="table-headers">
+                                </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

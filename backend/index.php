@@ -1,6 +1,7 @@
 <?php
 // Autoload Composer dependencies
 require __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/rest/routes/AuthRoutes.php';
 require_once __DIR__ . '/rest/routes/users.php';
 require_once __DIR__ . '/rest/routes/tasks.php';
@@ -49,10 +50,10 @@ Flight::map('auth_middleware', function() {
 Flight::before('start', function(&$params, &$output) {
     $url = Flight::request()->url;
 
-    // Public routes
+    // POPRAVKA: Koristimo strpos umjesto str_starts_with radi kompatibilnosti
     if (
-        str_starts_with($url, '/auth/login') ||
-        str_starts_with($url, '/auth/register')
+        strpos($url, '/auth/login') === 0 ||
+        strpos($url, '/auth/register') === 0
     ) {
         return TRUE;
     }
@@ -64,8 +65,6 @@ Flight::before('start', function(&$params, &$output) {
         }
 
         $token = $matches[1];
-
-        // Verify token using middleware
         Flight::auth_middleware()->verifyToken($token);
 
     } catch (\Exception $e) {
@@ -73,11 +72,9 @@ Flight::before('start', function(&$params, &$output) {
     }
 });
 
-
-// ===== Default route =====
 Flight::route('/', function() {
     echo 'Hello from Flight!';
 });
 
-// ===== Start Flight =====
 Flight::start();
+?>

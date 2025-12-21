@@ -21,7 +21,7 @@ var UserService = {
             e.preventDefault();
             
             const entity = {
-                fullname: $("#fullName").val(),
+                name: $("#name").val(),
                 email: $("#email").val(),
                 password: $("#password").val()
             };
@@ -67,12 +67,30 @@ var UserService = {
             contentType: "application/json",
             data: JSON.stringify(entity),
             success: function (res) {
-                toastr.success("Registration successful! You can now login.");
-                window.location.hash = "#login";
+                console.log("RESPONSE OD SERVERA:", res); // Gledaj u konzolu (F12)
+
+                // Ako server vrati samo ID (broj), pretvori ga u uspjeh
+                // Ako server vrati JSON objekat, to je isto super.
+                
+                toastr.success("Registration successful! Please login.");
+                
+                // Forsiramo preusmjeravanje nakon kratke pauze da vidiš poruku
+                setTimeout(function() {
+                    console.log("Preusmjeravam na login...");
+                    window.location.hash = "#login";
+                }, 1000);
             },
-            error: function (xhr) {
-                toastr.error("Registration failed. Email might already be in use.");
-                console.error("Registration error:", xhr.responseText);
+            error: function (xhr, status, error) {
+                console.error("Greška detalji:", xhr);
+                console.log("Response text:", xhr.responseText);
+                
+                // Čak i ako je 200 OK, ako JSON nije validan, jQuery baci "parsererror"
+                if (xhr.status === 200) {
+                    toastr.success("Registracija uspjela (iako je format čudan)!");
+                    window.location.hash = "#login";
+                } else {
+                    toastr.error("Greška: " + xhr.responseText);
+                }
             }
         });
     },

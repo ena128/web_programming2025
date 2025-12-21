@@ -1,91 +1,70 @@
 <?php
-require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../DAO/AuthDAO.php';
+require_once __DIR__ . '/../../config.php'; 
 
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 
 class AuthService {
-
     private $authDAO;
-    private $secret_key = "your_secret_key"; // Use a complex string here
 
     public function __construct() {
         $this->authDAO = new AuthDAO();
     }
 
-    /**
-     * Registers a new user.
-     * Hashes the password and ensures the role is set.
-     */
     public function register($data) {
         try {
-            // Check if user already exists
             $exists = $this->authDAO->getByEmail($data['email']);
             if ($exists) {
-                return ['success' => false, 'error' => 'User with this email already exists.'];
+                return ['success' => false, 'error' => 'User already exists'];
             }
 
-            // Hash the password using PHP standard BCRYPT
-            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
             
-            // Map 'fullname' from frontend to 'name' if your DB column is named 'name'
-            // If your column is 'fullname', keep it as is.
-            $user = $this->authDAO->create($data);
+            if (!isset($data['role'])) {
+                $data['role'] = 'USER';
+            }
 
-            return [
-                'success' => true, 
-                'message' => 'Registration successful',
-                'data' => $user
-            ];
+            // Koristimo createUser (ili add) iz BaseDAO
+            $this->authDAO->createUser($data);
+
+            return ['success' => true, 'message' => 'Registered successfully'];
+
         } catch (\Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
-    /**
-     * Authenticates a user and returns a JWT token.
-     */
     public function login($data) {
-        try {
-            // 1. Fetch user by email from DAO
-            $user = $this->authDAO->getByEmail($data['email']);
+        $user = $this->authDAO->getByEmail($data['email']);
 
-            // 2. Verify existence and password
-            if ($user && password_verify($data['password'], $user['password'])) {
-                
-                // Identify the correct ID field (handles 'id' or 'user_id')
-                $user_id = isset($user['id']) ? $user['id'] : ($user['user_id'] ?? null);
-
-                // 3. Prepare JWT Payload
-                $payload = [
-                    'iat' => time(),                 // Issued at
-                    'exp' => time() + (60 * 60 * 8), // Expires in 8 hours
-                    'user' => [
-                        'id' => $user_id,
-                        'email' => $user['email'],
-                        'role' => $user['role'],
-                        'fullname' => $user['fullname'] ?? $user['name'] ?? 'User'
-                    ]
-                ];
-
-                // 4. Encode Token
-                $jwt = JWT::encode($payload, $this->secret_key, 'HS256');
-
-                return [
-                    'success' => true,
-                    'data' => [
-                        'token' => $jwt,
-                        'user' => $payload['user']
-                    ]
-                ];
-            }
-
-            // If we reach here, credentials were wrong
-            return ['success' => false, 'error' => 'Invalid email or password.'];
-
-        } catch (\Exception $e) {
-            return ['success' => false, 'error' => 'Server error: ' . $e->getMessage()];
+        if (!$user || !password_verify($data['password'], $user['password'])) {
+            return ['success' => false, 'error' => 'Invalid email or password'];
         }
+
+        // === POPRAVKA ZA TVOJU GREŠKU (Line 56) ===
+        // Provjeravamo da li baza vraća 'id' ili 'user_id'
+        $db_id = isset($user['id']) ? $user['id'] : (isset($user['user_id']) ? $user['user_id'] : null);
+
+        if (!$db_id) {
+            // Ako nema ni id ni user_id, nešto nije u redu sa bazom
+            return ['success' => false, 'error' => 'Database error: User ID not found'];
+        }
+
+        // Payload
+        $payload = [
+            'user' => [
+                'id' => $db_id,  // Ovdje koristimo pronađeni ID
+                'email' => $user['email'],
+                'name' => $user['name'],
+                'role' => $user['role']
+            ],
+            'iat' => time(),
+            'exp' => time() + (60 * 60 * 24)
+        ];
+
+        $jwt = JWT::encode($payload, Config::JWT_SECRET(), 'HS256');
+
+        return ['success' => true, 'data' => ['token' => $jwt]];
     }
 }
+?>

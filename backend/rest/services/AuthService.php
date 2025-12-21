@@ -11,23 +11,38 @@ class AuthService {
         $this->authDAO = new AuthDAO();
     }
 
-    public function register($data) {
+   public function register($data) {
         try {
+            // 1. Provjera da li korisnik postoji
             $exists = $this->authDAO->getByEmail($data['email']);
             if ($exists) {
-                return ['success' => false, 'error' => 'User already exists'];
+                return ['success' => false, 'error' => 'User with this email already exists'];
             }
 
+            // 2. Hashiranje lozinke
             $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
             
+            // 3. Postavljanje role
             if (!isset($data['role'])) {
                 $data['role'] = 'USER';
             }
 
-            // Koristimo createUser (ili add) iz BaseDAO
-            $this->authDAO->createUser($data);
+            // 4. Upis u bazu
+            // createUser vraća ID novog korisnika
+            $new_user_id = $this->authDAO->createUser($data);
 
-            return ['success' => true, 'message' => 'Registered successfully'];
+            // 5. Priprema odgovora (OVO JE FALILO)
+            // Dodajemo ID u podatke koje vraćamo
+            $data['id'] = $new_user_id;
+            
+            // Brišemo password iz odgovora radi sigurnosti
+            unset($data['password']);
+
+            return [
+                'success' => true, 
+                'message' => 'User registered successfully',
+                'data' => $data // <--- OVO JE KLJUČNO! Sada ruta neće pucati.
+            ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];

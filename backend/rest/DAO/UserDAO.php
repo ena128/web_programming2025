@@ -15,16 +15,7 @@ class UserDAO extends BaseDAO {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
-    public function createUser($name, $email, $password, $role = 'user') {
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-        return $this->create([
-            'name' => $name,
-            'email' => $email,
-            'password' => $hashedPassword,
-            'role' => $role,
-            'created_at' => date("Y-m-d H:i:s")
-        ]);
-    }
+  
 
     
     public function getAllUsers() {

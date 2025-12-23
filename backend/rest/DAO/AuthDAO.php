@@ -41,19 +41,9 @@ class AuthDAO extends BaseDAO {
 
     // Optionally, get all users (admin purpose)
     public function getAllUsers() {
-        $stmt = $this->connection->query("SELECT id, name, email, role FROM users");
+        $stmt = $this->connection->query("SELECT user_id, name, email, role FROM users");
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
-    // Create a new user
-    public function createUser($name, $email, $password, $role = 'user') {
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $this->connection->prepare("INSERT INTO users (name, email, password, role) VALUES (:name, :email, :password, :role)");
-        $stmt->bindParam(":name", $name);
-        $stmt->bindParam(":email", $email);
-        $stmt->bindParam(":password", $hashedPassword);
-        $stmt->bindParam(":role", $role);
-        $stmt->execute();
-        return $this->connection->lastInsertId();
-    }
+   
 }

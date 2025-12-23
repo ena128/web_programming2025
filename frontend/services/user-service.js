@@ -1,86 +1,103 @@
 var UserService = {
-    /**
-     * Inicijalizacija listenera za Login i Register forme
-     */
     init: function () {
-        // Login logika
+        // LOGIN LISTENER
         $(document).off("submit", "#login-form").on("submit", "#login-form", function (e) {
             e.preventDefault();
-            UserService.login({
+            const entity = {
                 email: $("#email").val(),
                 password: $("#password").val()
-            });
+            };
+            UserService.login(entity);
         });
 
-        // Register logika
+        // REGISTER LISTENER
         $(document).off("submit", "#register-form").on("submit", "#register-form", function (e) {
             e.preventDefault();
-            UserService.register({
-                fullname: $("#fullName").val(),
+            const entity = {
+                name: $("#name").val(), 
                 email: $("#email").val(),
                 password: $("#password").val()
-            });
+            };
+            UserService.register(entity);
+        });
+
+        // LOGOUT LISTENER
+        $(document).on("click", "#logoutBtn", function() {
+            UserService.logout();
         });
     },
 
-    /**
-     * Ključna funkcija: Dekodira token da izvučemo podatke (Ime, Role, ID)
-     */
     parseJwt: function (token) {
         if (!token || token === "undefined") return null;
         try {
             var base64Url = token.split('.')[1];
             var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return JSON.parse(decodeURIComponent(atob(base64).split('').map(function(c) {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        } catch (e) {
-            return null;
-        }
+            }).join('')));
+        } catch (e) { return null; }
     },
 
-    /**
-     * OVO JE DIO KOJI TI TREBA: Inicijalizacija Account stranice
-     */
+    // OVO JE FALILO: Funkcija koja pravi meni zavisno od toga da li si Guest ili User
+    generateMenuItems: function() {
+        const token = localStorage.getItem("user_token");
+        const ul = $("#navbarSupportedContent ul"); // Selektujemo listu u navbaru
+        
+        let html = `
+            <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="#about-us">About Us</a></li>
+        `;
+
+        if (token) {
+            // Ako je ulogovan -> Prikazi Account i Logout
+            html += `
+                <li class="nav-item"><a class="nav-link" href="#account">My Account</a></li>
+                <li class="nav-item"><button class="btn btn-link nav-link" id="logoutBtn">Logout</button></li>
+            `;
+        } else {
+            // Ako NIJE ulogovan (Guest) -> Prikazi Login i Register
+            html += `
+                <li class="nav-item"><a class="nav-link" href="#login">Login</a></li>
+                <li class="nav-item"><a class="nav-link" href="#register">Register</a></li>
+            `;
+        }
+
+        ul.html(html);
+    },
+
     initAccountPage: function () {
         const token = localStorage.getItem("user_token");
-        
-        // 1. Ako nema tokena, vrati na login
+
+        // Ako neko pokuša ući na Account a nije ulogovan -> Login
         if (!token) {
             window.location.hash = "#login";
             return;
         }
 
-        // 2. Dekodiraj token
         const payload = UserService.parseJwt(token);
-        
-        // Provjera da li je token validan
+
         if (!payload || !payload.user) {
-            toastr.error("Invalid token. Please login again.");
+            toastr.error("Invalid token");
             UserService.logout();
             return;
         }
 
         const user = payload.user;
+        $("#username").text(user.name || user.email);
 
-        // 3. OVDJE SE POSTAVLJA IME KORISNIKA
-        // Tražimo element sa id="username" i upisujemo user.name
-        $("#username").text(user.name); 
-
-        // 4. Logika za prikazivanje panela (Admin vs User)
-        if (user.role && user.role.toUpperCase() === 'ADMIN') {
-            // Ako je Admin
-            $("#adminPanel").show();      // Prikaži admin panel
-            UserAdminService.loadAllUsers(); // Učitaj tabelu korisnika
+        // Role-Based Display
+        if (user.role === 'ADMIN') {
+            $("#adminPanel").show();
+            $("#userPanel").show();
+            if(typeof UserAdminService !== 'undefined') {
+                UserAdminService.loadAllUsers();
+            }
         } else {
-            // Ako je običan User
-            $("#adminPanel").hide();      // Sakrij admin panel
+            $("#adminPanel").hide();
+            $("#userPanel").show();
         }
 
-        // 5. Učitaj taskove (ovo vide svi)
-        // Ako imaš CategoryService, možeš ga ovdje pozvati da napuniš dropdown menije
-        if (typeof TaskService !== 'undefined') {
+        if(typeof TaskService !== 'undefined') {
             TaskService.loadUserTasks();
         }
     },
@@ -92,10 +109,15 @@ var UserService = {
             contentType: "application/json",
             data: JSON.stringify(entity),
             success: function (res) {
-                // Čuvanje tokena
-                localStorage.setItem("user_token", res.token || res.data.token);
-                toastr.success("Login successful!");
-                window.location.hash = "#account";
+                const token = res.token || (res.data && res.data.token);
+                if (token) {
+                    localStorage.setItem("user_token", token);
+                    toastr.success("Login successful!");
+                    window.location.hash = "#account";
+                    UserService.generateMenuItems(); // Osvježi meni nakon logina
+                } else {
+                    toastr.error("Token error");
+                }
             },
             error: function (xhr) {
                 toastr.error(xhr.responseJSON ? xhr.responseJSON.error : "Login failed");
@@ -110,23 +132,25 @@ var UserService = {
             contentType: "application/json",
             data: JSON.stringify(entity),
             success: function (res) {
-                toastr.success("Registration successful!");
-                window.location.hash = "#login";
+                toastr.success("Success! Redirecting to login...");
+                setTimeout(function() {
+                    window.location.hash = "#login";
+                }, 1000);
             },
             error: function (xhr) {
-                toastr.error("Registration failed.");
+                let msg = xhr.responseJSON ? xhr.responseJSON.error : "Error";
+                toastr.error(msg);
             }
         });
     },
 
     logout: function () {
         localStorage.removeItem("user_token");
-        window.location.hash = "#home";
-        location.reload();
+        window.location.hash = "#login";
+        UserService.generateMenuItems(); // Osvježi meni nakon logouta
     }
 };
 
-// Inicijalizacija na document ready
 $(document).ready(function () {
     UserService.init();
 });

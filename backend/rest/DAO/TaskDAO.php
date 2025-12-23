@@ -21,12 +21,18 @@ class TaskDAO extends BaseDAO {
         return $this->connection->lastInsertId();
     }
 
-    public function getByUserId($user_id) {
-        $stmt = $this->connection->prepare("SELECT * FROM tasks WHERE user_id = :user_id");
-        $stmt->bindParam(':user_id', $user_id);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+   public function getByUserId($user_id) {
+    $sql = "SELECT t.*, c.name as category_name 
+            FROM tasks t 
+            LEFT JOIN categories c ON t.category_id = c.category_id 
+            WHERE t.user_id = :user_id
+            ORDER BY t.priority_id DESC";
+
+    $stmt = $this->connection->prepare($sql);
+    $stmt->bindParam(':user_id', $user_id);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
     public function updateTask($task_id, $title, $due_date, $status, $priority_id, $category_id) {
         $query = "UPDATE tasks SET title = :title, due_date = :due_date, status = :status, 
@@ -49,5 +55,6 @@ class TaskDAO extends BaseDAO {
         $stmt->execute();
         return $stmt->rowCount(); 
     }
+    
 }
 ?>

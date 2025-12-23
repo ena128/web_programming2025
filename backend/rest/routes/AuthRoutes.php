@@ -18,8 +18,8 @@ Flight::group('/auth', function() {
             $data = json_decode(Flight::request()->getBody(), true);
         }
 
-        if (empty($data['email']) || empty($data['password']) || empty($data['fullname'])) {
-            Flight::halt(400, json_encode(['error' => 'Fullname, email, and password are required']));
+        if (empty($data['email']) || empty($data['password']) || empty($data['name'])) {
+            Flight::halt(400, json_encode(['error' => 'Name, email, and password are required']));
         }
 
         // Force role to ADMIN for this project setup

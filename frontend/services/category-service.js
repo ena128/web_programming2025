@@ -34,8 +34,34 @@ const CategoryService = {
         }, function (error) {
             toastr.error(error.responseJSON?.message || "Failed to add category.");
         });
+    },
+    populateCategoryDropdown: function(containerId) {
+        const $select = $(containerId);
+        $select.html('<option value="" selected disabled>Loading...</option>');
+
+        RestClient.get("categories", function (data) {
+            let html = '<option value="" selected disabled>Choose a category...</option>';
+            
+            // Provjera da li je data niz ili objekat
+            // (RestClient obično vraća direktno podatke, ali za svaki slučaj)
+            const categories = data.data ? data.data : data;
+
+            if (categories && categories.length > 0) {
+                categories.forEach(function(cat) {
+                    html += `<option value="${cat.category_id}">${cat.name}</option>`;
+                });
+            } else {
+                html = '<option value="" disabled>No categories found</option>';
+            }
+
+            $select.html(html);
+        }, function (error) {
+            $select.html('<option value="" disabled>Error loading categories</option>');
+            console.error(error);
+        });
     }
 };
+
 
 /**
  * Event Delegation for Category Actions

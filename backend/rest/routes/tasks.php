@@ -1,9 +1,7 @@
 <?php
 use OpenApi\Annotations as OA;
 
-require_once __DIR__ . '/../services/TaskService.php';
-
-Flight::set('TaskService', new TaskService());
+Flight::set('taskService', new TaskService());
 
 /**
  * @OA\Get(
@@ -14,18 +12,19 @@ Flight::set('TaskService', new TaskService());
  * )
  */
 Flight::route('GET /tasks', function(){
-    // Dozvoli pristup i Adminima i Userima
     Flight::auth_middleware()->authorizeRoles([Roles::ADMIN, Roles::USER]);
+    $user = Flight::get('user'); // Podaci iz dekodiranog tokena
 
-    $user = Flight::get('user');
-
-    if ($user->role === Roles::ADMIN) {
-        // Admin vidi sve taskove u sistemu
-        Flight::json(Flight::TaskService()->getAll());
-    } else {
-        // Običan korisnik vidi SAMO svoje taskove
-        // Pretpostavljamo da TaskService ima metodu getByUserId
-        Flight::json(Flight::TaskService()->getByUserId($user->id));
+    try {
+        if (strtolower($user->role) === Roles::ADMIN) {
+            // Admin poziva getAll da vidi sve u sistemu
+            Flight::json(Flight::taskService()->getAll());
+        } else {
+            // Običan korisnik poziva metodu koja filtrira po njegovom ID-u
+            Flight::json(Flight::taskService()->getByUserId($user->id));
+        }
+    } catch (Exception $e) {
+        Flight::halt(500, json_encode(['error' => $e->getMessage()]));
     }
 });
 
@@ -41,7 +40,7 @@ Flight::route('GET /tasks/@id', function($id){
     
     // Ovdje bi idealno trebala provjera da li task pripada useru, 
     // ali za sada samo vraćamo task po ID-u.
-    Flight::json(Flight::TaskService()->getById($id));
+    Flight::json(Flight::taskService()->getById($id));
 });
 
 /**
@@ -56,13 +55,11 @@ Flight::route('POST /tasks', function(){
 
     $data = Flight::request()->data->getData();
     
-    // AUTOMATSKI DODAJ USER_ID:
-    // Ne želimo da user šalje tuđi ID, uzimamo ga iz tokena
     $user = Flight::get('user');
     $data['user_id'] = $user->id;
 
     // Pozivamo metodu za kreiranje (create ili add, zavisno od servisa)
-    Flight::json(Flight::TaskService()->create($data));
+    Flight::json(Flight::taskService()->create($data));
 });
 
 /**
@@ -76,7 +73,7 @@ Flight::route('PUT /tasks/@id', function($id){
     Flight::auth_middleware()->authorizeRoles([Roles::ADMIN, Roles::USER]);
 
     $data = Flight::request()->data->getData();
-    Flight::json(Flight::TaskService()->update($id, $data));
+    Flight::json(Flight::taskService()->update($id, $data));
 });
 
 /**
@@ -88,7 +85,7 @@ Flight::route('PUT /tasks/@id', function($id){
  */
 Flight::route('DELETE /tasks/@id', function($id){
     Flight::auth_middleware()->authorizeRoles([Roles::ADMIN, Roles::USER]);
-    Flight::json(Flight::TaskService()->delete($id));
+    Flight::json(Flight::taskService()->delete($id));
 });
 
 /**
@@ -100,5 +97,5 @@ Flight::route('DELETE /tasks/@id', function($id){
  */
 Flight::route('GET /tasks/user/@user_id', function($user_id){
     Flight::auth_middleware()->authorizeRoles([Roles::ADMIN, Roles::USER]);
-    Flight::json(Flight::TaskService()->getByUserId($user_id));
+    Flight::json(Flight::taskService()->getByUserId($user_id));
 });

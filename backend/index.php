@@ -5,12 +5,14 @@ require_once __DIR__ . '/config.php';
 // ===== Roles =====
 require_once __DIR__ . '/data/roles.php';
 
-require_once __DIR__ . '/rest/routes/AuthRoutes.php';
-require_once __DIR__ . '/rest/routes/users.php';
-require_once __DIR__ . '/rest/routes/tasks.php';
-require_once __DIR__ . '/rest/routes/categories.php';
-require_once __DIR__ . '/rest/routes/priorities.php';
-require_once __DIR__ . '/rest/routes/activitylogs.php';
+// ===== Register services with Flight =====
+Flight::register('authService', 'AuthService');
+Flight::register('userService', 'UserService');
+Flight::register('taskService', 'TaskService');
+Flight::register('categoryService', 'CategoryService');
+Flight::register('priorityService', 'PriorityService');
+Flight::register('activityLogsService', 'ActivityLogsService');
+
 
 // ===== Services =====
 require_once __DIR__ . '/rest/services/UserService.php';
@@ -24,6 +26,8 @@ require_once __DIR__ . '/rest/services/AuthService.php';
 // ===== Middleware =====
 require_once __DIR__ . '/middleware/AuthMiddleware.php';
 
+
+
 // ===== DAOs (if needed directly) =====
 require_once __DIR__ . '/rest/DAO/AuthDAO.php';
 require_once __DIR__ . '/rest/DAO/UserDAO.php';
@@ -36,13 +40,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// ===== Register services with Flight =====
-Flight::register('authService', 'AuthService');
-Flight::register('userService', 'UserService');
-Flight::register('TaskService', 'TaskService');
-Flight::register('categoryService', 'CategoryService');
-Flight::register('priorityService', 'PriorityService');
-Flight::register('activityLogsService', 'ActivityLogsService');
+
 
 // ===== Register middleware with Flight =====
 Flight::map('auth_middleware', function() {
@@ -78,6 +76,13 @@ Flight::before('start', function(&$params, &$output) {
 Flight::route('/', function() {
     echo 'Hello from Flight!';
 });
+
+require_once __DIR__ . '/rest/routes/AuthRoutes.php';
+require_once __DIR__ . '/rest/routes/users.php';
+require_once __DIR__ . '/rest/routes/tasks.php';
+require_once __DIR__ . '/rest/routes/categories.php';
+require_once __DIR__ . '/rest/routes/priorities.php';
+require_once __DIR__ . '/rest/routes/activitylogs.php';
 
 Flight::start();
 ?>

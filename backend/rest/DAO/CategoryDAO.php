@@ -20,6 +20,9 @@ class CategoryDAO extends BaseDAO {
     public function getCategoryById($category_id) {
         return $this->getById($category_id);
     }
+    public function getCategoryByName($name) {
+    return $this->queryUnique("SELECT * FROM categories WHERE name = :name", ['name' => $name]);
+}
 
     public function updateCategory($category_id, $name) {
         $query = "UPDATE categories SET name = :name WHERE category_id = :category_id";

@@ -51,7 +51,7 @@ var TaskService = {
                             </div>
                             
                             <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-danger" onclick="TaskService.deleteTask(${t.id})">
+                                <button class="btn btn-sm btn-outline-danger" onclick="TaskService.deleteTask(${t.task_id})">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -103,7 +103,48 @@ var TaskService = {
             }
         });
     },
+loadCategories: function() {
+    // 1. UZMI TOKEN (ovo je vjerovatno falilo)
+    const token = localStorage.getItem("user_token");
 
+    $.ajax({
+        url: Constants.PROJECT_BASE_URL + "/categories",
+        method: "GET",
+        // 2. POŠALJI TOKEN U HEADERU
+        headers: { "Authorization": "Bearer " + token }, 
+        
+        success: function(response) {
+            console.log("Stigle kategorije:", response); // <--- OVO POGLEDAJ U KONZOLI
+
+            let html = '<option value="" selected disabled>Choose a category</option>';
+            
+            // 3. ODREDI GDJE JE NIZ PODATAKA
+            // Backend nekad vrati samo niz, nekad {data: [...]}, nekad {categories: [...]}
+            let categories = [];
+            
+            if (Array.isArray(response)) {
+                categories = response;
+            } else if (response.data) {
+                categories = response.data;
+            } else if (response.categories) {
+                categories = response.categories;
+            }
+
+            // 4. GENERIŠI HTML
+            categories.forEach(cat => {
+                // Pazi da li je 'id' i 'name', provjeri u konzoli šta piše u objektu
+                html += `<option value="${cat.id}">${cat.name}</option>`;
+            });
+
+            // Ubaci u HTML
+            $("#categorySelect").html(html);
+        },
+        error: function(xhr) {
+            console.error("Greška pri učitavanju kategorija:", xhr);
+            $("#categorySelect").html('<option value="">Error loading categories</option>');
+        }
+    });
+},
     /**
      * Briše task
      */
@@ -125,6 +166,7 @@ var TaskService = {
         }
     }
 };
+
 
 // Inicijalizacija servisa kada je dokument spreman
 $(document).ready(function() {

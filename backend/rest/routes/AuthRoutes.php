@@ -23,7 +23,7 @@ Flight::group('/auth', function() {
         }
 
         // Force role to ADMIN for this project setup
-        $data['role'] = 'ADMIN';
+        $data['role'] = 'USER';
 
         $response = Flight::authService()->register($data);
 

@@ -10877,3 +10877,14 @@ textarea.form-control-lg {
 #forgot-password button:hover {
   background: var(--bs-indigo);
 }
+#toast-container > .toast-error {
+    background-color: #007bff !important; 
+    background-image: none !important;    
+    opacity: 1 !important;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+}
+
+
+#toast-container > .toast-error .toast-message {
+    color: #ffffff !important;
+}

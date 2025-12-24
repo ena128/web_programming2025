@@ -12,6 +12,14 @@ class AuthService {
     }
 
    public function register($data) {
+
+    
+    if (strlen($data['password']) < 6) {
+    return ['success' => false, 'error' => 'Password must be at least 6 characters long.'];
+}
+if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+    return ['success' => false, 'error' => 'Invalid email format.'];
+}
         try {
             // 1. Provjera da li korisnik postoji
             $exists = $this->authDAO->getByEmail($data['email']);

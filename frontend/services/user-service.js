@@ -7,17 +7,34 @@ var UserService = {
                 email: $("#email").val(),
                 password: $("#password").val()
             };
+            
             UserService.login(entity);
         });
 
         // REGISTER LISTENER
         $(document).off("submit", "#register-form").on("submit", "#register-form", function (e) {
             e.preventDefault();
+            
+            const password = $("#password").val();
+            const confirmPassword = $("#confirmPassword").val();
+
+            if (password.length < 6) {
+        toastr.error("Password has to be at least 6 characters long!"); 
+        return; 
+    }
+           
+            if (password !== confirmPassword) {
+                
+                toastr.error("Passwords do not match!"); 
+                return; 
+            }
+
             const entity = {
                 name: $("#name").val(), 
                 email: $("#email").val(),
-                password: $("#password").val()
+                password: password 
             };
+            
             UserService.register(entity);
         });
 
@@ -38,10 +55,9 @@ var UserService = {
         } catch (e) { return null; }
     },
 
-    // OVO JE FALILO: Funkcija koja pravi meni zavisno od toga da li si Guest ili User
     generateMenuItems: function() {
         const token = localStorage.getItem("user_token");
-        const ul = $("#navbarSupportedContent ul"); // Selektujemo listu u navbaru
+        const ul = $("#navbarSupportedContent ul"); 
         
         let html = `
             <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
@@ -68,7 +84,6 @@ var UserService = {
     initAccountPage: function () {
         const token = localStorage.getItem("user_token");
 
-        // Ako neko pokuša ući na Account a nije ulogovan -> Login
         if (!token) {
             window.location.hash = "#login";
             return;
@@ -114,7 +129,7 @@ var UserService = {
                     localStorage.setItem("user_token", token);
                     toastr.success("Login successful!");
                     window.location.hash = "#account";
-                    UserService.generateMenuItems(); // Osvježi meni nakon logina
+                    UserService.generateMenuItems(); 
                 } else {
                     toastr.error("Token error");
                 }
@@ -137,17 +152,27 @@ var UserService = {
                     window.location.hash = "#login";
                 }, 1000);
             },
-            error: function (xhr) {
-                let msg = xhr.responseJSON ? xhr.responseJSON.error : "Error";
-                toastr.error(msg);
+        error: function (xhr) {
+            
+            let msg = "This email is already taken!";
+            
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                msg = xhr.responseJSON.error; 
+            } else if (xhr.status === 409) {
+                msg = "This email is already taken!";
+            } else if (xhr.status === 400) {
+                msg = "Invalid data or email already exists.";
             }
-        });
-    },
+
+            toastr.error(msg);
+        }
+    });
+},
 
     logout: function () {
         localStorage.removeItem("user_token");
         window.location.hash = "#login";
-        UserService.generateMenuItems(); // Osvježi meni nakon logouta
+        UserService.generateMenuItems(); 
     }
 };
 

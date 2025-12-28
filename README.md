@@ -1,7 +1,7 @@
 TodoMaster - Full-Stack Task Management System
 TodoMaster is a robust, full-stack web application designed to help users organize their daily lives. It features a modern, responsive frontend and a secure, RESTful API backend, allowing for seamless task tracking, categorization, and priority management.
 
-Live Demo: https://sea-lion-app-z5bja.ondigitalocean.app/
+Live Demo: https://sea-lion-app-z5bja.ondigitalocean.app
 
 Tech Stack
 The application is built using a decoupled architecture (Separation of Concerns):

@@ -32,8 +32,9 @@ class Config {
         return self::get_env("DB_HOST");
     }
 
-    public static function JWT_SECRET() {
-        return self::get_env("JWT_SECRET");
+   public static function JWT_SECRET()
+    {
+        return 'enaslipicevic0303';
     }
 }
 

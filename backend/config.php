@@ -51,7 +51,6 @@ class Database {
                 $options = [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::MYSQL_ATTR_SSL_MODE => PDO::MYSQL_ATTR_SSL_MODE_REQUIRED
                 ];
 
                 self::$connection = new PDO($dsn, Config::DB_USER(), Config::DB_PASSWORD(), $options);

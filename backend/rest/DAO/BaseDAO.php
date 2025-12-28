@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . "/Config.php";
+
 class BaseDAO {
     protected $connection;
     protected $tableName;
@@ -7,109 +9,102 @@ class BaseDAO {
 
     public function __construct($tableName, $primaryKey = null) {
         $this->tableName = $tableName;
-    
-        // Ensure primaryKey is set, or try to detect it
+
+        try {
+            $dsn = sprintf(
+                "mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4",
+                Config::DB_HOST(),
+                Config::DB_PORT(),
+                Config::DB_NAME()
+            );
+
+            $this->connection = new PDO(
+                $dsn,
+                Config::DB_USER(),
+                Config::DB_PASSWORD(),
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::MYSQL_ATTR_SSL_MODE => PDO::MYSQL_ATTR_SSL_MODE_REQUIRED
+                ]
+            );
+
+        } catch (PDOException $e) {
+            die("Database connection failed");
+        }
+
+        // Primary key
         if ($primaryKey === null) {
             $this->primaryKey = $this->detectPrimaryKey();
         } else {
             $this->primaryKey = $primaryKey;
         }
-    
-        try {
-            $dsn = "mysql:host=localhost;dbname=todomasterdb;charset=utf8mb4";
-            $username = "root";
-            $password = "";
-            $this->connection = new PDO($dsn, $username, $password);
-            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (PDOException $e) {
-            die("Database connection failed: " . $e->getMessage());
-        }
     }
-
 
     private function detectPrimaryKey() {
-        $stmt = $this->connection->prepare("SHOW KEYS FROM $this->tableName WHERE Key_name = 'PRIMARY'");
+        $stmt = $this->connection->prepare(
+            "SHOW KEYS FROM {$this->tableName} WHERE Key_name = 'PRIMARY'"
+        );
         $stmt->execute();
-        $primaryKeyData = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $primaryKeyData ? $primaryKeyData['Column_name'] : 'id'; // Default to 'id' if no primary key found
+        $pk = $stmt->fetch();
+        return $pk ? $pk['Column_name'] : 'id';
     }
-
 
     public function getAll() {
-        $stmt = $this->connection->prepare("SELECT * FROM $this->tableName");
+        $stmt = $this->connection->prepare("SELECT * FROM {$this->tableName}");
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll();
     }
 
-
     public function getById($id) {
-        $stmt = $this->connection->prepare("SELECT * FROM $this->tableName WHERE $this->primaryKey = :id");
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->connection->prepare(
+            "SELECT * FROM {$this->tableName} WHERE {$this->primaryKey} = :id"
+        );
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch();
     }
 
     public function create($data) {
         $columns = implode(", ", array_keys($data));
-        $values = ":" . implode(", :", array_keys($data));
-        $stmt = $this->connection->prepare("INSERT INTO $this->tableName ($columns) VALUES ($values)");
-        foreach ($data as $key => $value) {
-            $stmt->bindValue(":$key", $value);
-        }
-        $stmt->execute();
+        $params  = ":" . implode(", :", array_keys($data));
+
+        $stmt = $this->connection->prepare(
+            "INSERT INTO {$this->tableName} ($columns) VALUES ($params)"
+        );
+
+        $stmt->execute($data);
         return $this->connection->lastInsertId();
     }
 
-  
     public function update($id, $data) {
-        // Ensure $data is not empty
-        if (empty($data)) {
-            echo "No data provided to update<br>";
-            return false;
-        }
-    
-        // Dynamically generate the SET clause for SQL
-        $fields = implode(", ", array_map(fn($key) => "$key = :$key", array_keys($data)));
-        
-        // Check the generated SQL for debugging purposes
-        $sql = "UPDATE $this->tableName SET $fields WHERE $this->primaryKey = :id";
-        echo "SQL Query: $sql<br>";
-        
-        $stmt = $this->connection->prepare($sql);
-    
-        // Bind the values for fields
-        foreach ($data as $key => $value) {
-            $stmt->bindValue(":$key", $value);
-        }
-        
-        // Bind the primary key value
-        $stmt->bindValue(":id", $id);
-        
-        // Execute the query and return the result
-        if ($stmt->execute()) {
-            echo "Update successful<br>";
-            return true;
-        } else {
-            echo "Update failed<br>";
-            return false;
-        }
+        if (empty($data)) return false;
+
+        $fields = implode(
+            ", ",
+            array_map(fn($k) => "$k = :$k", array_keys($data))
+        );
+
+        $data['id'] = $id;
+
+        $stmt = $this->connection->prepare(
+            "UPDATE {$this->tableName} SET $fields WHERE {$this->primaryKey} = :id"
+        );
+
+        return $stmt->execute($data);
     }
 
     public function delete($id) {
-        $stmt = $this->connection->prepare("DELETE FROM $this->tableName WHERE $this->primaryKey = :id");
-        $stmt->bindParam(":id", $id);
-        return $stmt->execute();
+        $stmt = $this->connection->prepare(
+            "DELETE FROM {$this->tableName} WHERE {$this->primaryKey} = :id"
+        );
+        return $stmt->execute(['id' => $id]);
     }
 
-   
     public function countAll() {
-        $stmt = $this->connection->prepare("SELECT COUNT(*) FROM $this->tableName");
+        $stmt = $this->connection->prepare(
+            "SELECT COUNT(*) FROM {$this->tableName}"
+        );
         $stmt->execute();
         return $stmt->fetchColumn();
     }
-    protected function fetchAll($query) {
-        $stmt = $this->connection->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
 }
-?>

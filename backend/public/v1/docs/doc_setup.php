@@ -10,7 +10,7 @@
  *   )
  * ),
  * @OA\Server(
- *     url="http://localhost/web_programming2025/backend/",
+ *     url="https://seashell-backend-ab123.ondigitalocean.app",
  *     description="API server"
  * ),
  * @OA\SecurityScheme(

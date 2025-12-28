@@ -50,8 +50,8 @@ Flight::before('start', function(&$params, &$output) {
     if (
         $method === 'OPTIONS' ||
         $url === '/' || 
-        strpos($url, '/auth/login') === 0 ||
-        strpos($url, '/auth/register') === 0
+        strpos($url, '/auth/login') !== false || 
+        strpos($url, '/auth/register') !== false
     ) {
         return TRUE;
     }
@@ -61,10 +61,8 @@ Flight::before('start', function(&$params, &$output) {
         if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
             Flight::halt(401, json_encode(['error' => 'Missing or invalid Authorization header']));
         }
-
         $token = $matches[1];
         Flight::auth_middleware()->verifyToken($token);
-
     } catch (\Exception $e) {
         Flight::halt(401, json_encode(['error' => "Invalid or expired token: " . $e->getMessage()]));
     }

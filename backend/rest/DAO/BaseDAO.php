@@ -9,29 +9,13 @@ class BaseDAO {
         $this->tableName = $tableName;
 
         try {
-            $dsn = sprintf(
-                "mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4",
-                Config::DB_HOST(),
-                Config::DB_PORT(),
-                Config::DB_NAME()
-            );
-
-            $this->connection = new PDO(
-                $dsn,
-                Config::DB_USER(),
-                Config::DB_PASSWORD(),
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::MYSQL_ATTR_SSL_MODE => PDO::MYSQL_ATTR_SSL_MODE_REQUIRED
-                ]
-            );
-
-        } catch (PDOException $e) {
+            
+            $this->connection = Database::connect();
+        } catch (Exception $e) {
             die("Database connection failed");
         }
 
-        // Primary key
+      
         if ($primaryKey === null) {
             $this->primaryKey = $this->detectPrimaryKey();
         } else {
@@ -44,14 +28,16 @@ class BaseDAO {
             "SHOW KEYS FROM {$this->tableName} WHERE Key_name = 'PRIMARY'"
         );
         $stmt->execute();
-        $pk = $stmt->fetch();
+        $pk = $stmt->fetch(PDO::FETCH_ASSOC);
         return $pk ? $pk['Column_name'] : 'id';
     }
 
     public function getAll() {
-        $stmt = $this->connection->prepare("SELECT * FROM {$this->tableName}");
+        $stmt = $this->connection->prepare(
+            "SELECT * FROM {$this->tableName}"
+        );
         $stmt->execute();
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getById($id) {
@@ -59,7 +45,7 @@ class BaseDAO {
             "SELECT * FROM {$this->tableName} WHERE {$this->primaryKey} = :id"
         );
         $stmt->execute(['id' => $id]);
-        return $stmt->fetch();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function create($data) {
